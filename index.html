@@ -4,28 +4,31 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kalkulator Logistik Pro - Sofyan Mujid</title>
-    [cite_start]<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"> [cite: 2]
-    [cite_start]<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"> [cite: 2]
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; [cite_start]} [cite: 3]
-        .header-card { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); color: white; padding: 30px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); [cite_start]} [cite: 5, 6]
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .header-card { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 30px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .result-box { background: #1a1a1a; color: #00d2ff; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; [cite_start]} [cite: 7, 8]
-        .table thead { background-color: #f8f9fa; [cite_start]} [cite: 10]
+        .result-box { background: #1a1a1a; color: #00d2ff; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; }
+        .table thead { background-color: #f8f9fa; }
         .btn-export { min-width: 140px; }
-        @media print { .no-print { display: none; [cite_start]} } [cite: 16, 17]
+        .status-ideal { color: #198754; font-weight: bold; }
+        .status-warning { color: #fd7e14; font-weight: bold; }
+        .status-inefficient { color: #dc3545; font-weight: bold; }
+        @media print { .no-print { display: none; } }
     </style>
 </head>
 <body>
 
 <div class="container py-4">
     <div class="header-card text-center">
-        <h2><i class="fas fa-file-export me-2"></i> Kalkulator Logistik & Ekspor Data</h2>
-        <p>Estimasi Muatan PIK 2 & Ongkir Jabodetabek</p>
+        <h2><i class="fas fa-shipping-fast me-2"></i> Kalkulator Logistik Material</h2>
+        <p>Estimasi Muatan PIK 2 & Ongkir Jabodetabek (Berat & Kubikasi)</p>
         <div class="mt-3 no-print">
             <button class="btn btn-danger btn-export me-2" onclick="exportToPDF()">
                 <i class="fas fa-file-pdf me-1"></i> Simpan PDF
@@ -42,8 +45,8 @@
                 <div class="card-header bg-white d-flex justify-content-between align-items-center">
                     <h5 class="mb-0">Daftar Material</h5>
                     <div class="no-print">
-                        [cite_start]<button class="btn btn-sm btn-outline-danger me-2" onclick="resetCalculator()"><i class="fas fa-sync"></i> Reset</button> [cite: 22]
-                        [cite_start]<button class="btn btn-sm btn-primary" onclick="addRow()"><i class="fas fa-plus"></i> Tambah</button> [cite: 23]
+                        <button class="btn btn-sm btn-outline-danger me-2" onclick="resetCalculator()"><i class="fas fa-sync"></i> Reset</button>
+                        <button class="btn btn-sm btn-primary" onclick="addRow()"><i class="fas fa-plus"></i> Tambah</button>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -57,7 +60,7 @@
                                 <th class="no-print"></th>
                             </tr>
                         </thead>
-                        [cite_start]<tbody></tbody> [cite: 28]
+                        <tbody></tbody>
                     </table>
                 </div>
             </div>
@@ -70,13 +73,14 @@
                 <div class="mb-2">
                     <label class="small">Jarak (km) dari PIK 2:</label>
                     <input type="number" id="jarakKm" class="form-control" value="10" oninput="calculateTotal()">
+                    <small class="text-muted">Jkt: 15km | Tgr: 25km | Bgr: 65km</small>
                 </div>
                 <div class="mb-2">
-                    <label class="small">Biaya Tol PP:</label>
+                    <label class="small">Biaya Tol PP (Rp):</label>
                     <input type="number" id="biayaTol" class="form-control" value="0" oninput="calculateTotal()">
                 </div>
                 <div class="mb-3">
-                    <label class="small">Kuli Bongkar:</label>
+                    <label class="small">Kuli Bongkar (Rp):</label>
                     <input type="number" id="biayaKuli" class="form-control" value="0" oninput="calculateTotal()">
                 </div>
                 <div class="result-box mb-2">
@@ -89,14 +93,14 @@
 
     <div class="card shadow-sm border-0 mt-2">
         <div class="card-header bg-dark text-white">
-            <h5 class="mb-0"><i class="fas fa-truck-moving me-2"></i>Estimasi Biaya Pengiriman</h5>
+            <h5 class="mb-0"><i class="fas fa-truck-moving me-2"></i>Simulasi Kendaraan & Estimasi Ongkir</h5>
         </div>
         <div class="card-body p-0">
-            <table class="table table-bordered table-hover align-middle mb-0" id="ongkirTable">
+            <table class="table table-bordered table-hover align-middle mb-0">
                 <thead class="table-light text-center">
                     <tr>
                         <th>Armada</th>
-                        <th>Kapasitas</th>
+                        <th>Kapasitas (T/m³)</th>
                         <th>Trip</th>
                         <th>Total Ongkir</th>
                         <th>Keterangan</th>
@@ -109,123 +113,125 @@
 </div>
 
 <script>
-    [cite_start]// Data Database Material [cite: 36, 37, 38, 39]
+    // Database Material [Berat(kg), Kubikasi(m3)]
     const materials = new Map([
         ["Pilih Item", [0, 0]],
         ["TEHEL 60X60 UMUM", [30, 0.04]],
-        ["SEMEN TIGA RODA", [50, 0.03]],
+        ["SEMEN BOSOWA/TONASA", [50, 0.03]],
         ["BESI 10 SNI", [7, 0.01]],
         ["BESI 12 SNI", [10, 0.01]],
         ["TANKI AIR 1200L", [21, 1.5]],
         ["GRANIT 80X80", [44, 0.06]],
-        ["PIPA 4 AW TRILIUN", [9, 0.12]]
+        ["PIPA 4 AW TRILIUN", [9, 0.12]],
+        ["KLOSET JONGKOK", [9, 0.08]]
     ]);
 
-    [cite_start]// Data Armada & Tarif Jabodetabek [cite: 40]
+    // Data Armada & Tarif Jabodetabek
     const truckData = [
-        { name: "Pick-up", ton: 1.5, m3: 4, base: 95000, perKm: 5000 },
+        { name: "Pick-up / L300", ton: 1.5, m3: 4, base: 95000, perKm: 5000 },
         { name: "CDE Engkel", ton: 2.5, m3: 9, base: 240000, perKm: 7000 },
         { name: "CDD Double", ton: 4.5, m3: 14, base: 450000, perKm: 8500 },
-        { name: "Fuso Berat", ton: 15.0, m3: 30, base: 1100000, perKm: 15000 }
+        { name: "Fuso / Tronton", ton: 15.0, m3: 30, base: 1100000, perKm: 15000 }
     ];
 
-    [cite_start]let rowCount = 0; [cite: 41]
+    let rowCount = 0;
 
     function formatIDR(v) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v); }
 
-    [cite_start]function addRow() { [cite: 46]
-        [cite_start]rowCount++; [cite: 46]
-        [cite_start]const row = document.querySelector('#tonaseTable tbody').insertRow(); [cite: 47]
-        [cite_start]row.id = `row-${rowCount}`; [cite: 47]
+    function addRow() {
+        rowCount++;
+        const row = document.querySelector('#tonaseTable tbody').insertRow();
+        row.id = `row-${rowCount}`;
         row.innerHTML = `
             <td><select class="form-select form-select-sm" onchange="updateRow(${rowCount})">${createOptions()}</select></td>
             <td class="text-center small"><span id="w-${rowCount}">0</span>kg / <span id="v-${rowCount}">0</span>m³</td>
             <td><input type="number" class="form-control form-control-sm text-center" id="qty-${rowCount}" value="0" oninput="updateRow(${rowCount})" disabled></td>
             <td class="text-end fw-bold"><div id="tot-w-${rowCount}">0 kg</div><div class="small text-muted" id="tot-v-${rowCount}">0 m³</div></td>
             <td class="no-print"><button class="btn btn-sm text-danger" onclick="deleteRow(${rowCount})"><i class="fas fa-trash"></i></button></td>
-        [cite_start]`; [cite: 47, 48, 49, 50]
+        `;
     }
 
-    [cite_start]function createOptions() { [cite: 43]
+    function createOptions() {
         let opt = '';
-        [cite_start]materials.forEach((v, k) => opt += `<option value="${k}">${k}</option>`); [cite: 44]
-        [cite_start]return opt; [cite: 45]
+        materials.forEach((v, k) => opt += `<option value="${k}">${k}</option>`);
+        return opt;
     }
 
-    [cite_start]function updateRow(idx) { [cite: 51]
-        [cite_start]const item = document.querySelector(`#row-${idx} select`).value; [cite: 52]
-        [cite_start]const qtyInp = document.getElementById(`qty-${idx}`); [cite: 52]
-        const data = materials.get(item) || [cite_start][0, 0]; [cite: 53]
+    function updateRow(idx) {
+        const item = document.querySelector(`#row-${idx} select`).value;
+        const qtyInp = document.getElementById(`qty-${idx}`);
+        const data = materials.get(item) || [0, 0];
         
-        [cite_start]qtyInp.disabled = (data[0] === 0); [cite: 54, 55]
-        const qty = parseFloat(qtyInp.value) || [cite_start]0; [cite: 53]
+        qtyInp.disabled = (data[0] === 0);
+        const qty = parseFloat(qtyInp.value) || 0;
         
-        [cite_start]document.getElementById(`w-${idx}`).textContent = data[0]; [cite: 53]
+        document.getElementById(`w-${idx}`).textContent = data[0];
         document.getElementById(`v-${idx}`).textContent = data[1];
-        [cite_start]document.getElementById(`tot-w-${idx}`).textContent = (data[0] * qty).toLocaleString() + " kg"; [cite: 56]
+        document.getElementById(`tot-w-${idx}`).textContent = (data[0] * qty).toLocaleString('id-ID') + " kg";
         document.getElementById(`tot-v-${idx}`).textContent = (data[1] * qty).toFixed(2) + " m³";
-        [cite_start]calculateTotal(); [cite: 57]
+        calculateTotal();
     }
 
-    function deleteRow(idx) { document.getElementById(`row-${idx}`).remove(); calculateTotal(); [cite_start]} [cite: 57, 58, 59]
+    function deleteRow(idx) { document.getElementById(`row-${idx}`).remove(); calculateTotal(); }
 
-    [cite_start]function calculateTotal() { [cite: 59]
+    function calculateTotal() {
         let tKg = 0; let tM3 = 0;
         document.querySelectorAll('#tonaseTable tbody tr').forEach(row => {
             const item = row.querySelector('select').value;
             const q = parseFloat(row.querySelector('input').value) || 0;
             const data = materials.get(item) || [0, 0];
             tKg += (data[0] * q); tM3 += (data[1] * q);
-        [cite_start]}); [cite: 60]
+        });
 
-        [cite_start]document.getElementById('totalTonDisplay').textContent = (tKg/1000).toFixed(2); [cite: 62]
+        document.getElementById('totalTonDisplay').textContent = (tKg/1000).toFixed(2);
         document.getElementById('totalM3Display').textContent = tM3.toFixed(2);
-        [cite_start]renderAnalysis(tKg/1000, tM3); [cite: 62]
+        renderAnalysis(tKg/1000, tM3);
     }
 
-    [cite_start]function renderAnalysis(tTon, tM3) { [cite: 63]
-        [cite_start]const body = document.getElementById('analysisBody'); [cite: 63]
+    function renderAnalysis(tTon, tM3) {
+        const body = document.getElementById('analysisBody');
         const km = parseFloat(document.getElementById('jarakKm').value) || 0;
         const tol = parseFloat(document.getElementById('biayaTol').value) || 0;
         const kuli = parseFloat(document.getElementById('biayaKuli').value) || 0;
-        [cite_start]body.innerHTML = ''; [cite: 63]
+        body.innerHTML = '';
 
-        [cite_start]if (tTon === 0) { [cite: 64]
-            [cite_start]body.innerHTML = '<tr><td colspan="5" class="text-center py-3">Masukkan item untuk kalkulasi.</td></tr>'; [cite: 64]
-            [cite_start]return; [cite: 65]
+        if (tTon === 0 && tM3 === 0) {
+            body.innerHTML = '<tr><td colspan="5" class="text-center py-3">Masukkan item untuk kalkulasi.</td></tr>';
+            return;
         }
 
-        [cite_start]truckData.forEach(truck => { [cite: 65]
-            [cite_start]const tripByTon = Math.ceil(tTon / truck.ton); [cite: 66]
+        truckData.forEach(truck => {
+            const tripByTon = Math.ceil(tTon / truck.ton);
             const tripByM3 = Math.ceil(tM3 / truck.m3);
-            [cite_start]const totalTrips = Math.max(tripByTon, tripByM3); [cite: 66]
+            const totalTrips = Math.max(tripByTon, tripByM3);
             
             const totalCost = (truck.base + (km * truck.perKm) + tol + kuli) * totalTrips;
+            const efficiency = ((tTon / (totalTrips * truck.ton)) * 100).toFixed(0);
+            let statusClass = efficiency > 80 ? "status-ideal" : (efficiency > 50 ? "status-warning" : "status-inefficient");
 
-            [cite_start]const row = body.insertRow(); [cite: 73]
+            const row = body.insertRow();
             row.innerHTML = `
                 <td class="fw-bold">${truck.name}</td>
                 <td class="text-center">${truck.ton}T / ${truck.m3}m³</td>
                 <td class="text-center">${totalTrips}x Trip</td>
                 <td class="text-end text-primary fw-bold">${formatIDR(totalCost)}</td>
-                <td class="small text-center">${tripByM3 > tripByTon ? 'Limit Vol' : 'Limit Berat'}</td>
-            [cite_start]`; [cite: 74, 75]
+                <td class="text-center ${statusClass}">${efficiency}% Efisien</td>
+            `;
         });
     }
 
-    // --- FITUR EKSPOR ---
+    // --- FUNGSI SIMPAN FILE ---
 
     function exportToPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF();
         
         doc.setFontSize(18);
-        doc.text("Laporan Estimasi Logistik - Sofyan Mujid", 14, 20);
+        doc.text("Estimasi Logistik Material - Sofyan Mujid", 14, 20);
         doc.setFontSize(11);
         doc.text(`Tanggal: ${new Date().toLocaleString('id-ID')}`, 14, 28);
-        doc.text(`Total Muatan: ${document.getElementById('totalTonDisplay').textContent} Ton / ${document.getElementById('totalM3Display').textContent} m3`, 14, 34);
+        doc.text(`Muatan: ${document.getElementById('totalTonDisplay').textContent} Ton / ${document.getElementById('totalM3Display').textContent} m3`, 14, 34);
 
-        // Tabel Material
         doc.autoTable({
             startY: 40,
             head: [['Material', 'Qty', 'Total Berat', 'Total Volume']],
@@ -237,24 +243,24 @@
             ])
         });
 
-        // Tabel Ongkir
         doc.autoTable({
             startY: doc.lastAutoTable.finalY + 10,
-            head: [['Armada', 'Kapasitas', 'Trip', 'Total Ongkir']],
-            body: Array.from(document.querySelectorAll('#analysisBody tr')).map(row => [
+            head: [['Armada', 'Kapasitas', 'Jml Trip', 'Total Ongkir']],
+            body: Array.from(document.getElementById('analysisBody').rows).map(row => [
                 row.cells[0].innerText,
                 row.cells[1].innerText,
                 row.cells[2].innerText,
                 row.cells[3].innerText
             ]),
-            headStyles: { fillColor: [41, 128, 185] }
+            headStyles: { fillColor: [30, 60, 114] }
         });
 
-        doc.save("Estimasi_Logistik_SofyanMujid.pdf");
+        doc.save("Laporan_Logistik_SofyanMujid.pdf");
     }
 
     function exportToExcel() {
-        // Data Material
+        const wb = XLSX.utils.book_new();
+        
         const materialData = Array.from(document.querySelectorAll('#tonaseTable tbody tr')).map(row => ({
             Material: row.querySelector('select').value,
             Qty: row.querySelector('input').value,
@@ -262,27 +268,27 @@
             Volume: row.querySelector('div[id^="tot-v"]').textContent
         }));
 
-        // Data Ongkir
-        const ongkirData = Array.from(document.querySelectorAll('#analysisBody tr')).map(row => ({
+        const ongkirData = Array.from(document.getElementById('analysisBody').rows).map(row => ({
             Armada: row.cells[0].innerText,
             Kapasitas: row.cells[1].innerText,
             Trip: row.cells[2].innerText,
             Total_Ongkir: row.cells[3].innerText
         }));
 
-        const wb = XLSX.utils.book_new();
-        const ws1 = XLSX.utils.json_to_sheet(materialData);
-        const ws2 = XLSX.utils.json_to_sheet(ongkirData);
-
-        XLSX.utils.book_append_sheet(wb, ws1, "Daftar Material");
-        XLSX.utils.book_append_sheet(wb, ws2, "Estimasi Ongkir");
-
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(materialData), "Material");
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(ongkirData), "Ongkir");
         XLSX.writeFile(wb, "Estimasi_Logistik_SofyanMujid.xlsx");
     }
 
-    function resetCalculator() { if(confirm('Hapus semua?')) { document.querySelector('#tonaseTable tbody').innerHTML = ''; addRow(); calculateTotal(); [cite_start]} } [cite: 79, 80]
+    function resetCalculator() { 
+        if(confirm('Hapus semua data?')) { 
+            document.querySelector('#tonaseTable tbody').innerHTML = ''; 
+            addRow(); 
+            calculateTotal(); 
+        } 
+    }
 
-    [cite_start]addRow(); [cite: 81]
+    addRow(); // Inisialisasi baris pertama
 </script>
 </body>
 </html>
