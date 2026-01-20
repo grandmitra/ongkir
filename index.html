@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kalkulator Tonase & Logistik - Sofyan Mujid</title>
+    <title>Kalkulator Tonase & Logistik - Grand Mitra</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     
@@ -12,11 +12,14 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .header-card { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 30px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .result-box { background: #1a1a1a; color: #00d2ff; padding: 15px; border-radius: 10px; text-align: center; font-weight: bold; }
+        .result-box { background-color: #343a40; color: white; padding: 15px; border-radius: 8px; font-weight: bold; text-align: center; }
         .table thead { background-color: #212529; color: white; }
+        .status-ideal { color: #198754; font-weight: bold; }
+        .status-warning { color: #ffc107; font-weight: bold; }
+        .status-inefficient { color: #dc3545; font-weight: bold; }
         @media print { .no-print { display: none; } }
     </style>
 </head>
@@ -26,63 +29,92 @@
     <div class="header-card text-center">
         <img src="https://grandmitra.com/wp-content/uploads/2024/09/gm-1536x328.png" alt="Logo" style="max-height: 60px; margin-bottom: 15px;">
         <h2><i class="fas fa-truck-moving me-2"></i> Kalkulator Tonase & Logistik</h2>
-        <p>Analisis Efisiensi Muatan & Biaya Operasional</p>
+        <p>Analisis Muatan & Estimasi Biaya Operasional Kendaraan</p>
         <div class="mt-3 no-print">
             <button class="btn btn-danger btn-sm me-2" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Ekspor PDF</button>
             <button class="btn btn-success btn-sm" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Ekspor Excel</button>
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
-            <h6 class="mb-0 fw-bold">Daftar Material Muatan</h6>
-            <button class="btn btn-sm btn-primary" onclick="addRow()"><i class="fas fa-plus"></i> Tambah Item</button>
-        </div>
-        <div class="table-responsive">
-            <table class="table align-middle mb-0" id="tonaseTable">
-                <thead>
-                    <tr class="small">
-                        <th style="width: 5%;">No</th>
-                        <th style="width: 40%;">Nama Material</th>
-                        <th class="text-center">Berat/Vol Satuan</th>
-                        <th class="text-center" style="width: 100px;">Qty</th>
-                        <th class="text-end">Total Kumulatif</th>
-                        <th class="no-print"></th>
-                    </tr>
-                </thead>
-                <tbody id="tableBody"></tbody>
-            </table>
-        </div>
-    </div>
-
     <div class="row g-3">
-        <div class="col-md-6">
-            <div class="result-box bg-dark">
-                <span class="small opacity-75">Total Berat:</span><br>
-                <span id="totalKgDisplay">0</span> kg
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center p-3">
+                    <h6 class="mb-0 fw-bold">Daftar Material Muatan</h6>
+                    <button class="btn btn-sm btn-primary" onclick="addRow()"><i class="fas fa-plus"></i> Tambah Item</button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle mb-0" id="tonaseTable">
+                        <thead>
+                            <tr class="small">
+                                <th style="width: 5%;">No</th>
+                                <th style="width: 40%;">Material</th>
+                                <th class="text-center">Berat/Vol Satuan</th>
+                                <th class="text-center" style="width: 100px;">Qty</th>
+                                <th class="text-end">Total Kumulatif</th>
+                                <th class="no-print"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
-        <div class="col-md-6">
-            <div class="result-box bg-primary text-white">
-                <span class="small opacity-75">Total Tonase:</span><br>
-                <span id="totalTonDisplay">0.00</span> Ton
+
+        <div class="col-lg-4">
+            <div class="card p-3 shadow-sm mb-3">
+                <h6 class="fw-bold"><i class="fas fa-cog me-2"></i>Parameter Operasional</h6>
+                <hr>
+                <div class="row g-2">
+                    <div class="col-6">
+                        <label class="small fw-bold">Jarak (KM):</label>
+                        <input type="number" id="jarakKm" class="form-control form-control-sm" value="10" oninput="calculateTotal()">
+                    </div>
+                    <div class="col-6">
+                        <label class="small fw-bold">Harga BBM/L:</label>
+                        <input type="number" id="hargaBBM" class="form-control form-control-sm" value="6800" oninput="calculateTotal()">
+                    </div>
+                    <div class="col-6">
+                        <label class="small fw-bold">Biaya Tol PP:</label>
+                        <input type="number" id="biayaTol" class="form-control form-control-sm" value="0" oninput="calculateTotal()">
+                    </div>
+                    <div class="col-6">
+                        <label class="small fw-bold">Biaya Kuli:</label>
+                        <input type="number" id="biayaKuli" class="form-control form-control-sm" value="0" oninput="calculateTotal()">
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="result-box bg-dark mb-2">
+                        <span class="small opacity-75">Beban Muatan:</span><br>
+                        <span id="totalKgDisplay">0</span> kg | <span id="totalTonDisplay">0,00</span> Ton
+                    </div>
+                    <div class="result-box bg-primary">
+                        <span class="small opacity-75">Estimasi Volume:</span><br>
+                        <span id="totalM3Display">0.00</span> m³
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="card mt-4 shadow-sm" id="analysisSection">
-        <div class="card-header bg-info text-white fw-bold">Analisis Daya Angkut Kendaraan</div>
+    <div class="card shadow-sm mt-2">
+        <div class="card-header bg-info text-white fw-bold">
+            <i class="fas fa-truck me-2"></i> Perbandingan Efisiensi Armada & Biaya
+        </div>
         <div class="table-responsive">
-            <table class="table table-sm mb-0">
-                <thead class="table-light">
+            <table class="table table-bordered align-middle mb-0">
+                <thead class="table-light text-center small">
                     <tr>
                         <th>Jenis Armada</th>
-                        <th class="text-center">Kapasitas (Ton)</th>
-                        <th class="text-center">Estimasi Trip</th>
-                        <th>Rekomendasi Efisiensi</th>
+                        <th>Kapasitas (Ton)</th>
+                        <th>Est. Trip</th>
+                        <th>Estimasi BBM</th>
+                        <th>Penyusutan</th>
+                        <th>Total Ongkir</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
-                <tbody id="analysisBody"></tbody>
+                <tbody id="analysisBody" class="small"></tbody>
             </table>
         </div>
     </div>
@@ -179,12 +211,16 @@
         { name: "Trailer 40 Feet", ton: 30.0, m3: 60, base: 3500000, perKm: 25000, fuelRate: 0.55, wear: 6500 }
     ];
 
+    function formatIDR(v) { 
+        return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(v); 
+    }
+
     function addRow() {
         const tbody = document.getElementById('tableBody');
-        const rowCount = tbody.rows.length + 1;
         const row = tbody.insertRow();
+        const rowIdx = tbody.rows.length;
         row.innerHTML = `
-            <td>${rowCount}</td>
+            <td>${rowIdx}</td>
             <td><select class="form-select form-select-sm item-select" onchange="updateRow(this)">${Array.from(materials.keys()).map(m => `<option value="${m}">${m}</option>`).join('')}</select></td>
             <td class="text-center small item-info">-</td>
             <td><input type="number" class="form-control form-control-sm text-center quantity-input" value="0" min="0" oninput="updateRow(this)" disabled></td>
@@ -196,11 +232,11 @@
     function updateRow(el) {
         const row = el.closest('tr');
         const item = row.querySelector('.item-select').value;
-        const qtyInput = row.querySelector('.quantity-input');
+        const qtyInp = row.querySelector('.quantity-input');
         const data = materials.get(item) || [0, 0];
         
-        qtyInput.disabled = (data[0] === 0);
-        const qty = parseFloat(qtyInput.value) || 0;
+        qtyInp.disabled = (data[0] === 0);
+        const qty = parseFloat(qtyInp.value) || 0;
         
         row.querySelector('.item-info').innerHTML = `${data[0]}kg / ${data[1]}m³`;
         row.querySelector('.total-info').innerHTML = `<div>${(data[0]*qty).toLocaleString('id-ID')} kg</div><div class="small text-muted">${(data[1]*qty).toFixed(2)} m³</div>`;
@@ -208,36 +244,50 @@
     }
 
     function calculateTotal() {
-        let totalKg = 0;
+        let tKg = 0, tM3 = 0;
         document.querySelectorAll('#tableBody tr').forEach(row => {
             const item = row.querySelector('.item-select').value;
-            const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
+            const q = parseFloat(row.querySelector('.quantity-input').value) || 0;
             const data = materials.get(item) || [0, 0];
-            totalKg += (data[0] * qty);
+            tKg += (data[0] * q); tM3 += (data[1] * q);
         });
         
-        const totalTon = totalKg / 1000;
-        document.getElementById('totalKgDisplay').textContent = totalKg.toLocaleString('id-ID');
-        document.getElementById('totalTonDisplay').textContent = totalTon.toFixed(2);
+        const tTon = tKg / 1000;
+        document.getElementById('totalKgDisplay').textContent = tKg.toLocaleString('id-ID');
+        document.getElementById('totalTonDisplay').textContent = tTon.toFixed(2).replace('.', ',');
+        document.getElementById('totalM3Display').textContent = tM3.toFixed(2);
         
-        renderAnalysis(totalTon);
+        renderAnalysis(tTon, tM3);
     }
 
-    function renderAnalysis(totalTon) {
+    function renderAnalysis(tTon, tM3) {
         const body = document.getElementById('analysisBody');
         body.innerHTML = '';
-        if (totalTon === 0) return;
+        if (tTon === 0) return;
 
-        truckCapacities.forEach(truck => {
-            const trips = Math.ceil(totalTon / truck.cap);
-            const efficiency = ((totalTon / (trips * truck.cap)) * 100).toFixed(0);
-            
+        const km = parseFloat(document.getElementById('jarakKm').value) || 0;
+        const hBbm = parseFloat(document.getElementById('hargaBBM').value) || 0;
+        const tol = parseFloat(document.getElementById('biayaTol').value) || 0;
+        const kuli = parseFloat(document.getElementById('biayaKuli').value) || 0;
+
+        truckData.forEach(truck => {
+            const trips = Math.max(Math.ceil(tTon / truck.ton), Math.ceil(tM3 / truck.m3));
+            const bbm = (km * 2 * truck.fuelRate * hBbm) * trips;
+            const susut = (km * 2 * truck.wear) * trips;
+            const total = ((truck.base + (km * truck.perKm)) * trips) + tol + kuli;
+            const efficiency = ((tTon / (trips * truck.ton)) * 100).toFixed(0);
+
+            let statusClass = efficiency >= 85 ? "status-ideal" : efficiency >= 60 ? "status-warning" : "status-inefficient";
+
             const row = body.insertRow();
             row.innerHTML = `
-                <td>${truck.name}</td>
-                <td class="text-center">${truck.cap} Ton</td>
-                <td class="text-center">${trips}x Trip</td>
-                <td><span class="badge ${efficiency > 80 ? 'bg-success' : 'bg-warning'}">${efficiency}% Efisien</span></td>
+                <td><b>${truck.name}</b></td>
+                <td class="text-center">${truck.ton} Ton</td>
+                <td class="text-center">${trips}x</td>
+                <td class="text-end">${formatIDR(bbm)}</td>
+                <td class="text-end">${formatIDR(susut)}</td>
+                <td class="text-end text-primary fw-bold">${formatIDR(total)}</td>
+                <td class="${statusClass}">${efficiency}% Efisien</td>
             `;
         });
     }
@@ -245,57 +295,73 @@
     async function exportToPDF() {
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF('p', 'mm', 'a4');
-        
-        // Load Logo Perusahaan
         const logoUrl = "https://grandmitra.com/wp-content/uploads/2024/09/gm-1536x328.png";
-        try {
-            doc.addImage(logoUrl, 'PNG', 14, 10, 50, 11);
-        } catch (e) { console.error("Logo failed to load"); }
-
-        doc.setFontSize(16);
-        doc.text("LAPORAN ANALISIS LOGISTIK", 14, 30);
-        doc.setFontSize(10);
-        doc.text("Tanggal: " + new Date().toLocaleDateString('id-ID'), 14, 37);
-
-        // Data Tabel Material (Hanya yang dipilih)
-        const tableData = [];
+        
+        try { doc.addImage(logoUrl, 'PNG', 14, 10, 50, 11); } catch (e) {}
+        doc.setFontSize(14); doc.text("LAPORAN ANALISIS LOGISTIK MATERIAL", 14, 30);
+        
+        const matData = [];
         document.querySelectorAll('#tableBody tr').forEach((row, i) => {
             const material = row.querySelector('.item-select').value;
             const qty = row.querySelector('.quantity-input').value;
             if(material !== "Pilih Item" && qty > 0) {
-                tableData.push([i+1, material, row.querySelector('.item-info').textContent, qty, row.querySelector('.total-info').textContent.replace(/\n/g, ' ')]);
+                matData.push([i+1, material, row.querySelector('.item-info').textContent, qty, row.querySelector('.total-info').textContent.replace(/\n/g, ' ')]);
             }
         });
 
-        doc.autoTable({
-            startY: 45,
-            head: [['No', 'Material', 'Berat/Vol Satuan', 'Qty', 'Total Kumulatif']],
-            body: tableData,
-            theme: 'striped',
-            headStyles: { fillColor: [30, 82, 152] }
+        doc.autoTable({ startY: 35, head: [['No', 'Material', 'Berat/Vol Satuan', 'Qty', 'Total Kumulatif']], body: matData, theme: 'striped' });
+        
+        const analysisData = [];
+        document.querySelectorAll('#analysisBody tr').forEach(row => {
+            const c = row.cells;
+            analysisData.push([c[0].textContent, c[1].textContent, c[2].textContent, c[5].textContent, c[6].textContent]);
         });
 
-        // Ringkasan
-        const finalY = doc.lastAutoTable.finalY + 10;
-        doc.setFontSize(12);
-        doc.text(`TOTAL TONASE: ${document.getElementById('totalTonDisplay').textContent} Ton`, 14, finalY);
-
+        doc.autoTable({ startY: doc.lastAutoTable.finalY + 10, head: [['Armada', 'Kapasitas', 'Trip', 'Total Biaya', 'Efisiensi']], body: analysisData, theme: 'grid', headStyles: { fillColor: [30, 82, 152] } });
         doc.save("Laporan_Logistik_GrandMitra.pdf");
     }
 
     function exportToExcel() {
-        const data = [["LAPORAN LOGISTIK"], ["Material", "Berat Satuan", "Vol Satuan", "Qty", "Total Berat", "Total Vol"]];
+        const data = [["LAPORAN LOGISTIK GRAND MITRA"], [], ["DAFTAR MATERIAL"], ["Material", "Berat (kg)", "Vol (m3)", "Qty", "Total Berat", "Total Vol"]];
         document.querySelectorAll('#tableBody tr').forEach(row => {
             const item = row.querySelector('.item-select').value;
-            const qty = parseFloat(row.querySelector('.quantity-input').value) || 0;
+            const q = parseFloat(row.querySelector('.quantity-input').value) || 0;
             const m = materials.get(item);
-            if(qty > 0) data.push([item, m[0], m[1], qty, m[0]*qty, m[1]*qty]);
+            if(q > 0) data.push([item, m[0], m[1], q, m[0]*q, m[1]*q]);
+        });
+
+        data.push([], ["ANALISIS BIAYA ARMADA"], ["Armada", "Trip", "BBM", "Penyusutan", "Total Ongkir"]);
+        const km = document.getElementById('jarakKm').value;
+        const hBbm = document.getElementById('hargaBBM').value;
+        const tol = parseFloat(document.getElementById('biayaTol').value) || 0;
+        const kuli = parseFloat(document.getElementById('biayaKuli').value) || 0;
+        const tTon = parseFloat(document.getElementById('totalTonDisplay').textContent.replace(',', '.'));
+        const tM3 = parseFloat(document.getElementById('totalM3Display').textContent);
+
+        truckData.forEach(t => {
+            const trips = Math.max(Math.ceil(tTon / t.ton), Math.ceil(tM3 / t.m3));
+            if(trips > 0) {
+                const bbm = (km * 2 * t.fuelRate * hBbm) * trips;
+                const susut = (km * 2 * t.wear) * trips;
+                const total = ((t.base + (km * t.perKm)) * trips) + tol + kuli;
+                data.push([t.name, trips, bbm, susut, total]);
+            }
         });
 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.aoa_to_sheet(data);
-        XLSX.utils.book_append_sheet(wb, ws, "Laporan");
-        XLSX.writeFile(wb, "Laporan_GrandMitra.xlsx");
+        
+        // Format mata uang Rupiah di Excel
+        const range = XLSX.utils.decode_range(ws['!ref']);
+        for (let R = range.s.r; R <= range.e.r; ++R) {
+            for (let C = 0; C <= range.e.c; ++C) {
+                const cell = ws[XLSX.utils.encode_cell({r: R, c: C})];
+                if (cell && typeof cell.v === 'number' && R > 5) cell.z = '"Rp"# ##0';
+            }
+        }
+
+        XLSX.utils.book_append_sheet(wb, ws, "Laporan_GrandMitra");
+        XLSX.writeFile(wb, "Laporan_Logistik.xlsx");
     }
 
     addRow();
