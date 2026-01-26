@@ -32,7 +32,10 @@
         <p>Analisis Muatan & Estimasi Biaya Operasional Kendaraan</p>
         <div class="mt-3 no-print">
             <button class="btn btn-danger btn-sm me-2" onclick="exportToPDF()"><i class="fas fa-file-pdf"></i> Ekspor PDF</button>
-            <button class="btn btn-success btn-sm" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Ekspor Excel</button>
+            <button class="btn btn-success btn-sm me-2" onclick="exportToExcel()"><i class="fas fa-file-excel"></i> Ekspor Excel</button>
+            <a href="https://www.google.com/maps/dir/Grand+Mitra+-+Toko+Bangunan+Modern+PIK+2+Tangerang,+Jalan+MH.+Thamrin+center+avenue+No.10,+Banten,+Kec.+Kosambi,+Kabupaten+Tangerang,+Banten+15213/Bantar+Gebang,+Bekasi,+West+Java/@-6.22816,106.6776114,56091m/data=!3m2!1e3!4b1!4m14!4m13!1m5!1m1!1s0x2e6a03fc6a46f3cd:0x869e7566d672b37e!2m2!1d106.7076702!2d-6.0682105!1m5!1m1!1s0x2e6993cd1cfd5131:0xbc41a51ae9cf5e0e!2m2!1d106.9898519!2d-6.3414752!3e0?entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoKLDEwMDc5MjA2N0gBUAM%3D" target="_blank" class="btn btn-warning btn-sm">
+                <i class="fas fa-map-marked-alt"></i> Lihat Rute
+            </a>
         </div>
     </div>
 
@@ -110,7 +113,8 @@
                         <th>Est. Trip</th>
                         <th>Estimasi BBM</th>
                         <th>Penyusutan</th>
-                        <th>Total Ongkir</th>
+                        <th>Armada Sendiri</th>
+                        <th>Armada Sewa</th>
                         <th>Status</th>
                     </tr>
                 </thead>
@@ -121,7 +125,7 @@
 </div>
 
 <script>
-   // Data Material: [Berat (kg), Volume (m3)]
+    // Data Material: [Berat (kg), Volume (m3)]
     const materials = new Map([
         ["Pilih Item", [0, 0]],
         ["TEHEL 25X25 UNO", [15, 0.02]],
@@ -273,11 +277,14 @@
 
         truckData.forEach(truck => {
             const trips = Math.max(Math.ceil(tTon / truck.ton), Math.ceil(tM3 / truck.m3));
+            
+            // Perhitungan biaya
             const bbm = (km * 2 * truck.fuelRate * hBbm) * trips;
             const susut = (km * 2 * truck.wear) * trips;
-            const total = ((truck.base + (km * truck.perKm)) * trips) + tol + kuli;
+            const totalArmadaSendiri = bbm + susut + tol + kuli;
+            const totalArmadaSewa = ((truck.base + (km * truck.perKm)) * trips) + tol + kuli;
+            
             const efficiency = ((tTon / (trips * truck.ton)) * 100).toFixed(0);
-
             let statusClass = efficiency >= 85 ? "status-ideal" : efficiency >= 60 ? "status-warning" : "status-inefficient";
 
             const row = body.insertRow();
@@ -287,7 +294,8 @@
                 <td class="text-center">${trips}x</td>
                 <td class="text-end">${formatIDR(bbm)}</td>
                 <td class="text-end">${formatIDR(susut)}</td>
-                <td class="text-end text-primary fw-bold">${formatIDR(total)}</td>
+                <td class="text-end text-success fw-bold">${formatIDR(totalArmadaSendiri)}</td>
+                <td class="text-end text-primary fw-bold">${formatIDR(totalArmadaSewa)}</td>
                 <td class="${statusClass}">${efficiency}% Efisien</td>
             `;
         });
@@ -315,10 +323,25 @@
         const analysisData = [];
         document.querySelectorAll('#analysisBody tr').forEach(row => {
             const c = row.cells;
-            analysisData.push([c[0].textContent, c[1].textContent, c[2].textContent, c[5].textContent, c[6].textContent]);
+            analysisData.push([
+                c[0].textContent, 
+                c[1].textContent, 
+                c[2].textContent, 
+                c[3].textContent, 
+                c[4].textContent,
+                c[5].textContent,  // Armada Sendiri
+                c[6].textContent,  // Armada Sewa
+                c[7].textContent   // Status
+            ]);
         });
 
-        doc.autoTable({ startY: doc.lastAutoTable.finalY + 10, head: [['Armada', 'Kapasitas', 'Trip', 'Total Biaya', 'Efisiensi']], body: analysisData, theme: 'grid', headStyles: { fillColor: [30, 82, 152] } });
+        doc.autoTable({ 
+            startY: doc.lastAutoTable.finalY + 10, 
+            head: [['Armada', 'Kapasitas', 'Trip', 'BBM', 'Penyusutan', 'Armada Sendiri', 'Armada Sewa', 'Efisiensi']], 
+            body: analysisData, 
+            theme: 'grid', 
+            headStyles: { fillColor: [30, 82, 152] } 
+        });
         doc.save("Laporan_Logistik_GrandMitra.pdf");
     }
 
@@ -331,7 +354,7 @@
             if(q > 0) data.push([item, m[0], m[1], q, m[0]*q, m[1]*q]);
         });
 
-        data.push([], ["ANALISIS BIAYA ARMADA"], ["Armada", "Trip", "BBM", "Penyusutan", "Total Ongkir"]);
+        data.push([], ["ANALISIS BIAYA ARMADA"], ["Armada", "Trip", "BBM", "Penyusutan", "Armada Sendiri", "Armada Sewa"]);
         const km = document.getElementById('jarakKm').value;
         const hBbm = document.getElementById('hargaBBM').value;
         const tol = parseFloat(document.getElementById('biayaTol').value) || 0;
@@ -344,8 +367,9 @@
             if(trips > 0) {
                 const bbm = (km * 2 * t.fuelRate * hBbm) * trips;
                 const susut = (km * 2 * t.wear) * trips;
-                const total = ((t.base + (km * t.perKm)) * trips) + tol + kuli;
-                data.push([t.name, trips, bbm, susut, total]);
+                const totalArmadaSendiri = bbm + susut + tol + kuli;
+                const totalArmadaSewa = ((t.base + (km * t.perKm)) * trips) + tol + kuli;
+                data.push([t.name, trips, bbm, susut, totalArmadaSendiri, totalArmadaSewa]);
             }
         });
 
